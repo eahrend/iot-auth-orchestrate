@@ -1,0 +1,32 @@
+version: '2'
+#projectID 	:= os.Getenv("PROJECT_ID")
+  #	region    	:= os.Getenv("REGION")
+  #	registryID 	:= os.Getenv("REGISTRY_ID")
+  #	deviceID 	:= os.Getenv("DEVICE_ID")
+#	privateKeyPath := os.Getenv("PRIVATE_KEY_PATH")
+#	algorithm := os.Getenv("ALGORITHM")
+services:
+  device1:
+    environment:
+      - PROJECT_ID=${PROJECT_ID}
+      - REGION=${REGION}
+      - REGISTRY_ID=${REGISTRY_ID}
+      - DEVICE_ID=device-one
+      - PRIVATE_KEY_PATH=/app/ec_private.pem
+      - ALGORITHM=${ALGORITHM}
+    build: ./device
+    volumes:
+      - ${PWD}/devicekeys/device1/ec_private.pem:/app/ec_private.pem
+  device2:
+    environment:
+      - PROJECT_ID=${PROJECT_ID}
+      - REGION=${REGION}
+      - REGISTRY_ID=${REGISTRY_ID}
+      - DEVICE_ID=device-two
+      - PRIVATE_KEY_PATH=/app/ec_private.pem
+      - ALGORITHM=${ALGORITHM}
+    build: ./device
+    volumes:
+      - ${PWD}/devicekeys/device2/ec_private.pem:/app/ec_private.pem
+  redis:
+    image: redis
