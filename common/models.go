@@ -2,11 +2,6 @@ package common
 
 import "time"
 
-type IotMessage struct {
-	Metadata IoTMetaData `json:"metadata"`
-	Message  interface{} `json:"message"`
-}
-
 // ReverseMessage takes the string and reverses the message
 type ReverseMessage struct {
 	MessageString string `json:"message_string"`

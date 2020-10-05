@@ -1,10 +1,5 @@
 version: '2'
-#projectID 	:= os.Getenv("PROJECT_ID")
-  #	region    	:= os.Getenv("REGION")
-  #	registryID 	:= os.Getenv("REGISTRY_ID")
-  #	deviceID 	:= os.Getenv("DEVICE_ID")
-#	privateKeyPath := os.Getenv("PRIVATE_KEY_PATH")
-#	algorithm := os.Getenv("ALGORITHM")
+
 services:
   device1:
     environment:
@@ -16,7 +11,7 @@ services:
       - ALGORITHM=${ALGORITHM}
     build: ./device
     volumes:
-      - ${PWD}/devicekeys/device1/ec_private.pem:/app/ec_private.pem
+      - ${PWD}/deviceKeys/device1/ec_private.pem:/app/ec_private.pem
   device2:
     environment:
       - PROJECT_ID=${PROJECT_ID}
@@ -27,6 +22,25 @@ services:
       - ALGORITHM=${ALGORITHM}
     build: ./device
     volumes:
-      - ${PWD}/devicekeys/device2/ec_private.pem:/app/ec_private.pem
+      - ${PWD}/deviceKeys/device2/ec_private.pem:/app/ec_private.pem
+  device3:
+    environment:
+      - PROJECT_ID=${PROJECT_ID}
+      - REGION=${REGION}
+      - REGISTRY_ID=${REGISTRY_ID}
+      - DEVICE_ID=device-three
+      - PRIVATE_KEY_PATH=/app/ec_private.pem
+      - ALGORITHM=${ALGORITHM}
+    build: ./device
+    volumes:
+      - ${PWD}/deviceKeys/device3/ec_private.pem:/app/ec_private.pem
+  auth-svc:
+    build: ./auth-svc
+    ports:
+      - "8081"
+  orca-svc:
+    build: ./orca-svc
+    ports:
+      - "8080"
   redis:
     image: redis

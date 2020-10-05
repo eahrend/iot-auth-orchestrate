@@ -4,8 +4,7 @@ IoT Authorization and Orchestration Example
 # Project Layout
 
 ## auth-svc
-This http service acts as the auth layer between orca-svc and the IoT-API
-
+This http service acts as the auth layer between orca-svc and the IoT-API, right now it's just basic auth, but can be extended to use JWT or whatever
 ## common
 Models/structs/functions shared between the other repos.
 
@@ -41,6 +40,9 @@ Consumers for the device events, could be a GCF, but it will probably be a conta
 
 ## orca-svc
 Gateway to the IoT API for users to interact with.
+
+## web
+the last thing I'm going to do cause I hate doing frontend work
 
 ## terraform
 If you wanna stand this up in GCP, this should stand up all you need. Note that there are billable components.  

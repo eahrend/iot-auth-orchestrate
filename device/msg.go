@@ -13,14 +13,12 @@ import (
 )
 
 func onMessageReceived(client mqtt.Client, message mqtt.Message) {
-	ciot := common.IotMessage{}
-	buf := bytes.NewBuffer(message.Payload())
-	json.NewDecoder(buf).Decode(&ciot)
-	switch operation := ciot.Metadata.Method; operation {
-	case "ReverseMessage":
-		reverseMessage(client, ciot)
-	case "AddTwo":
-		addTwo(client, ciot)
+	topicSplit := strings.Split(message.Topic(), "/")
+	switch operation := topicSplit[len(topicSplit)-1]; operation {
+	case "reverseString":
+		reverseMessage(client, message)
+	case "addTwo":
+		addTwo(client, message)
 	default:
 		fmt.Println("Method not supported")
 	}
@@ -35,8 +33,15 @@ func Reverse(orig string) string {
 	return strings.Join(c, "")
 }
 
-func reverseMessage(client mqtt.Client, msg common.IotMessage) {
-	messageToReverse := msg.Message.(common.ReverseMessage).MessageString
+func reverseMessage(client mqtt.Client, msg mqtt.Message) {
+	messageData := msg.Payload()
+	messageToReverseBlob := common.ReverseMessage{}
+	err := json.NewDecoder(bytes.NewBuffer(messageData)).Decode(&messageToReverseBlob)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	messageToReverse := messageToReverseBlob.MessageString
 	status := common.IoTDeviceState{
 		TimeStamp: time.Now(),
 		DeviceID:  os.Getenv("DEVICE_ID"),
@@ -58,9 +63,16 @@ func reverseMessage(client mqtt.Client, msg common.IotMessage) {
 	updateState(client, status)
 }
 
-func addTwo(client mqtt.Client, msg common.IotMessage) {
-	firstNumber := msg.Message.(common.AddTwoMessage).NumberOne
-	secondNumber := msg.Message.(common.AddTwoMessage).NumberTwo
+func addTwo(client mqtt.Client, msg mqtt.Message) {
+	messageData := msg.Payload()
+	addTwoMessage := common.AddTwoMessage{}
+	err := json.NewDecoder(bytes.NewBuffer(messageData)).Decode(&addTwoMessage)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	firstNumber := addTwoMessage.NumberOne
+	secondNumber := addTwoMessage.NumberTwo
 	status := common.IoTDeviceState{
 		TimeStamp: time.Now(),
 		DeviceID:  os.Getenv("DEVICE_ID"),
