@@ -2,11 +2,11 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"github.com/eahrend/iot-auth-orchestrate/common"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -23,6 +23,7 @@ func main() {
 
 func UseRedis(rdb *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		c.Set("redis", rdb)
 		c.Next()
 	}
@@ -40,8 +41,9 @@ func Authenticate() gin.HandlerFunc {
 			return
 		}
 		rdb := c.MustGet("redis").(*redis.Client)
-		userInfoBytes, err := rdb.Get(context.Background(), "users").Bytes()
+		userInfoBytes, err := rdb.Get("users").Bytes()
 		if err != nil {
+			log.Println("getting user bytes:", err.Error())
 			c.JSON(500, gin.H{
 				"error": err,
 			})
@@ -51,6 +53,7 @@ func Authenticate() gin.HandlerFunc {
 		userInfo := common.UserAuthDataKey{}
 		err = json.NewDecoder(bytes.NewBuffer(userInfoBytes)).Decode(&userInfo)
 		if err != nil {
+			log.Println("json decoding user information", err.Error())
 			c.JSON(500, gin.H{
 				"error": err,
 			})

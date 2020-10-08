@@ -2,17 +2,13 @@ package main
 
 import (
 	"crypto/tls"
-	// importing for side effects cause sometimes devices don't
-	// have the google certs installed as I've seen in the past
-	// so this is mostly just for helping out
-	_ "crypto/x509"
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/go-co-op/gocron"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -89,15 +85,22 @@ func connectToIoT(projectID string, region string, registryID string, deviceID s
 		}
 	}
 	client := mqtt.NewClient(opts)
+	log.Println("Creating client connection")
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
+		//panic(token.Error())
+		log.Fatalln("Token error on connection:", token.Error())
 	} else {
-		fmt.Printf("Connected!")
+		log.Printf("Connected!")
 	}
 	// this just simulates the device doing device stuff
 	// without the user constantly asking for an update
 	// i.e. push notification
-	s1 := gocron.NewScheduler(time.UTC)
-	s1.Every(5).Minutes().Do(updateStateWithRandomData, client)
+	go gocronRunner(client)
 	<-c
+}
+
+func gocronRunner(client mqtt.Client) {
+	s1 := gocron.NewScheduler(time.UTC)
+	s1.Every(1).Minutes().Do(updateStateWithRandomData, client)
+	s1.StartAsync()
 }

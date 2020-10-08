@@ -9,7 +9,9 @@ services:
       - DEVICE_ID=device-one
       - PRIVATE_KEY_PATH=/app/ec_private.pem
       - ALGORITHM=${ALGORITHM}
-    build: ./device
+    build:
+      context: .
+      dockerfile: Dockerfile.device
     volumes:
       - ${PWD}/deviceKeys/device1/ec_private.pem:/app/ec_private.pem
   device2:
@@ -20,7 +22,9 @@ services:
       - DEVICE_ID=device-two
       - PRIVATE_KEY_PATH=/app/ec_private.pem
       - ALGORITHM=${ALGORITHM}
-    build: ./device
+    build:
+      context: .
+      dockerfile: Dockerfile.device
     volumes:
       - ${PWD}/deviceKeys/device2/ec_private.pem:/app/ec_private.pem
   device3:
@@ -31,16 +35,32 @@ services:
       - DEVICE_ID=device-three
       - PRIVATE_KEY_PATH=/app/ec_private.pem
       - ALGORITHM=${ALGORITHM}
-    build: ./device
+    build:
+      context: .
+      dockerfile: Dockerfile.device
     volumes:
       - ${PWD}/deviceKeys/device3/ec_private.pem:/app/ec_private.pem
   auth-svc:
-    build: ./auth-svc
+    build:
+      context: .
+      dockerfile: Dockerfile.auth-svc
     ports:
-      - "8081"
+      - "8081:8081"
   orca-svc:
-    build: ./orca-svc
+    build:
+      context: .
+      dockerfile: Dockerfile.orca-svc
+    environment:
+      - AUTH_URL=iot-auth-orchestrate_auth-svc_1
+      - PROJECT_ID=${PROJECT_ID}
+      - REGION=${REGION}
+      - REGISTRY_ID=${REGISTRY_ID}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
     ports:
-      - "8080"
+      - "8080:8080"
+    volumes:
+    - ${PWD}/service-account.json:/app/service-account.json
   redis:
     image: redis
+    volumes:
+      - ${PWD}/redis-persistence:/data

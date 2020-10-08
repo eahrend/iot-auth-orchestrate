@@ -3,8 +3,15 @@ IoT Authorization and Orchestration Example
 
 # Project Layout
 
+## iot-auth-orchestrate/service-account.json
+Ignored by git, service account key that has access to the following roles in your project:
+
+- roles/cloudiot.viewer
+- roles/cloudiot.deviceController
+
 ## auth-svc
 This http service acts as the auth layer between orca-svc and the IoT-API, right now it's just basic auth, but can be extended to use JWT or whatever
+
 ## common
 Models/structs/functions shared between the other repos.
 

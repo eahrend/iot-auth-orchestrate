@@ -1,5 +1,5 @@
 *.pem
-
+service-account.json
 # Default ignored files
 /shelf/
 /workspace.xml

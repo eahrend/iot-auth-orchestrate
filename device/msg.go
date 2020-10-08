@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/eahrend/iot-auth-orchestrate/common"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"strings"
@@ -13,6 +14,8 @@ import (
 )
 
 func onMessageReceived(client mqtt.Client, message mqtt.Message) {
+	log.Println("Received Message: ", message.Payload())
+	log.Println("Message Topic: ", message.Topic())
 	topicSplit := strings.Split(message.Topic(), "/")
 	switch operation := topicSplit[len(topicSplit)-1]; operation {
 	case "reverseString":
@@ -85,7 +88,7 @@ func addTwo(client mqtt.Client, msg mqtt.Message) {
 	}
 	updateState(client, status)
 	sum := firstNumber + secondNumber
-	topicName := fmt.Sprintf("/devices/%s/events/addTwo", os.Getenv("DEVICE_ID"))
+	topicName := fmt.Sprintf("/devices/%s/events/addtwo", os.Getenv("DEVICE_ID"))
 	client.Publish(topicName, 1, false, sum)
 	status = common.IoTDeviceState{
 		TimeStamp: time.Now(),

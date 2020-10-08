@@ -3,9 +3,10 @@
 # Build Image
 ARG GO_VERSION=1.14
 FROM golang:${GO_VERSION}-alpine AS builder
-WORKDIR /go/src/github.com/eahrend/iot-auth-orchestrate/auth-svc
+RUN apk add git
+WORKDIR /go/src/github.com/eahrend/iot-auth-orchestrate/
 COPY ./ ./
-RUN go mod download
+WORKDIR /go/src/github.com/eahrend/iot-auth-orchestrate/auth-svc
 RUN CGO_ENABLED=0 go build \
     -installsuffix 'static' \
     -o /app .
