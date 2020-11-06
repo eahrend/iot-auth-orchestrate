@@ -20,9 +20,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if err != nil {
-		panic(err)
-	}
 	app := gin.Default()
 	config := map[string]string{
 		"projectID":  os.Getenv("PROJECT_ID"),
@@ -32,6 +29,8 @@ func main() {
 	app.Use(useConfig(config))
 	app.Use(UseCloudIoT(client))
 	app.Use(Authenticate())
+	app.POST("/devices/:deviceID/commands", genericCommand)
+	app.GET("/devices", GetDevices)
 	app.POST("/add/:deviceID", AddTwo)
 	app.POST("/reverse/:deviceID", ReverseString)
 	panic(app.Run("0.0.0.0:8080"))
@@ -42,6 +41,19 @@ func useConfig(config map[string]string) gin.HandlerFunc {
 		c.Set("config", config)
 		c.Next()
 	}
+}
+
+func genericCommand(c *gin.Context) {
+	sendCommand(c, "")
+}
+
+func GetDevices(c *gin.Context) {
+	deviceID, _ := c.Params.Get("deviceID")
+	ciot := c.MustGet("iot").(*cloudiot.Service)
+	req := ciot.Projects.Locations.Registries.Devices.Get(deviceID)
+	resp, _ := req.Do()
+	b, _ := resp.State.MarshalJSON()
+	c.JSON(200, string(b))
 }
 
 func sendCommand(c *gin.Context, subfolder string) {

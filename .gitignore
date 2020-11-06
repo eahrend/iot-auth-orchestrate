@@ -8,3 +8,5 @@ service-account.json
 /dataSources.local.xml
 # Editor-based HTTP Client requests
 /httpRequests/
+sql-persistence/
+./quickstart.sh

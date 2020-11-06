@@ -1,6 +1,8 @@
 # iot-auth-orchestrate
 IoT Authorization and Orchestration Example
 
+WARNING: NONE OF THIS SHOULD BE CONSIDERED PRODUCTION READY
+
 # Project Layout
 
 ## iot-auth-orchestrate/service-account.json
