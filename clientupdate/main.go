@@ -19,6 +19,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	go publishEvents(ctx, server, client, "device-state")
 	go publishEvents(ctx, server, client, "addtwo")
 	go publishEvents(ctx, server, client, "reverse")
 	app := gin.Default()

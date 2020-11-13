@@ -41,11 +41,32 @@ services:
     volumes:
       - ${PWD}/deviceKeys/device3/ec_private.pem:/app/ec_private.pem
   auth-svc:
+    depends_on:
+      - mysql
+    environment:
+      MYSQL_DATABASE: 'iot'
+      MYSQL_USER: 'iot-user'
+      MYSQL_PASSWORD: 'Password1'
+      MYSQL_HOST: "iot-auth-orchestrate_mysql_1"
     build:
       context: .
       dockerfile: Dockerfile.auth-svc
     ports:
       - "8081:8081"
+  clientupdate:
+    build:
+      context: .
+      dockerfile: Dockerfile.clientupdate
+    environment:
+      - AUTH_URL=iot-auth-orchestrate_auth-svc_1
+      - PROJECT_ID=${PROJECT_ID}
+      - REGION=${REGION}
+      - REGISTRY_ID=${REGISTRY_ID}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
+    ports:
+      - "8082:8082"
+    volumes:
+      - ${PWD}/service-account.json:/app/service-account.json
   orca-svc:
     build:
       context: .
@@ -60,8 +81,6 @@ services:
       - "8080:8080"
     volumes:
       - ${PWD}/service-account.json:/app/service-account.json
-  redis:
-    image: redis
   mysql:
     image: mysql:8
     environment:

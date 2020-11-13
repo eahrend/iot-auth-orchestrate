@@ -30,6 +30,7 @@ func main() {
 	app.Use(UseCloudIoT(client))
 	app.Use(Authenticate())
 	app.POST("/devices/:deviceID/commands", genericCommand)
+	app.GET("/devices/:deviceID", GetDevice)
 	app.GET("/devices", GetDevices)
 	app.POST("/add/:deviceID", AddTwo)
 	app.POST("/reverse/:deviceID", ReverseString)
@@ -48,6 +49,23 @@ func genericCommand(c *gin.Context) {
 }
 
 func GetDevices(c *gin.Context) {
+	deviceList := c.MustGet("devicelist").([]string)
+	ciot := c.MustGet("iot").(*cloudiot.Service)
+	deviceResp := map[string]string{}
+	for _, device := range deviceList {
+		req := ciot.Projects.Locations.Registries.Devices.Get(device)
+		resp, err := req.Do()
+		if err != nil {
+			c.JSON(500, err)
+			c.Abort()
+		}
+		b, _ := resp.State.MarshalJSON()
+		deviceResp[device] = string(b)
+	}
+	c.JSON(200, deviceResp)
+}
+
+func GetDevice(c *gin.Context) {
 	deviceID, _ := c.Params.Get("deviceID")
 	ciot := c.MustGet("iot").(*cloudiot.Service)
 	req := ciot.Projects.Locations.Registries.Devices.Get(deviceID)
@@ -61,9 +79,16 @@ func sendCommand(c *gin.Context, subfolder string) {
 	bodyBytes, _ := ioutil.ReadAll(c.Request.Body)
 	ciot := c.MustGet("iot").(*cloudiot.Service)
 	config := c.MustGet("config").(map[string]string)
-	req := cloudiot.SendCommandToDeviceRequest{
-		BinaryData: b64.StdEncoding.EncodeToString(bodyBytes),
-		Subfolder:  subfolder,
+	var req cloudiot.SendCommandToDeviceRequest
+	if subfolder == "" {
+		req = cloudiot.SendCommandToDeviceRequest{
+			BinaryData: b64.StdEncoding.EncodeToString(bodyBytes),
+		}
+	} else {
+		req = cloudiot.SendCommandToDeviceRequest{
+			BinaryData: b64.StdEncoding.EncodeToString(bodyBytes),
+			Subfolder:  subfolder,
+		}
 	}
 	name := fmt.Sprintf("projects/%s/locations/%s/registries/%s/devices/%s", config["projectID"], config["region"], config["registryID"], deviceID)
 	_, err := ciot.Projects.Locations.Registries.Devices.SendCommandToDevice(name, &req).Do()
@@ -104,7 +129,13 @@ func Authenticate() gin.HandlerFunc {
 		user, password, _ := c.Request.BasicAuth()
 		client := &http.Client{}
 		authURL := fmt.Sprintf("http://%s:8081", authSvc)
-		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/auth/%s", authURL, deviceID), nil)
+		var req *http.Request
+		var err error
+		if deviceID == "" {
+			req, err = http.NewRequest(http.MethodGet, fmt.Sprintf("%s/auth", authURL), nil)
+		} else {
+			req, err = http.NewRequest(http.MethodGet, fmt.Sprintf("%s/auth/%s", authURL, deviceID), nil)
+		}
 		if err != nil {
 			log.Println("error from auth request", err.Error())
 			c.JSON(500, gin.H{
@@ -114,10 +145,10 @@ func Authenticate() gin.HandlerFunc {
 			return
 		}
 		req.SetBasicAuth(user, password)
-		_, err = client.Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			log.Println("error from auth client do", err.Error())
-			c.JSON(500, gin.H{
+			c.JSON(resp.StatusCode, gin.H{
 				"error": err,
 			})
 			c.Abort()
